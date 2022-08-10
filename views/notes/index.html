@@ -1,0 +1,44 @@
+{{ define "notes/index" }}
+{{ template "globals/header" .}}
+    <div class="container">
+        <div class="card mt-4">
+            <div class="card-header">
+                Create New Note
+            </div>
+            <div class="card-body">
+                <form class="row" method="post" action="" id ="create-notes">
+                    <div class="col-auto">
+                        <label for="content" class="visually-hidden">Content</label>
+                        <input type="text" class="form-control" id="content" name="content" placeholder="Content" required>
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="card mt-4">
+            <div class="card-header">
+                Note Lists
+            </div>
+            <div class="card-body">
+                <table id="my-task" class="table display">
+                    <thead>
+                        <tr>
+                            <th>Tugas</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tfoot>
+                        <tr>
+                            <th>Tugas</th>
+                            <th>Status</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            
+        </div>
+    </div>
+{{ template "globals/footer" .}}
+{{ end }}

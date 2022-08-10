@@ -1,0 +1,289 @@
+{{ define "globals/footer" }}
+    
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-A3rJD856KowSb7dwlZdYEkO39Gagi7vIsF0jrRAoQmDKKtQBHUuLZ9AsSv4jD4Xa" crossorigin="anonymous"></script>
+    
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="//cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
+    <script src="https://momentjs.com/downloads/moment-with-locales.min.js"></script>
+    <div class="modal fade" id="task-detail" tabindex="-1">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Task Detail</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="ubah-task" action="" method="post">
+            <input type="hidden" id="id-update" name="id" value=0>
+            <div class="modal-body">
+            <div class="mb-3">
+                <label for="taskName" class="form-label">Task Name</label>
+                <input type="text" class="form-control" id="content-update" name="content" value="" aria-describedby="taskName" required>
+            </div>
+            <div class="mb-3">
+                <label for="statusTask" class="form-label">Status</label>
+                <h5 class="form-label" id="status"><strong>Status</strong></h5>
+            </div>
+    
+            <div class="mb-3">
+                <label for="createAt" class="form-label">Dibuat Pada</label>
+                <h5 class="form-label" id="createdAt"><strong>CreateAt</strong></h5>
+            </div>
+    
+            <div class="mb-3">
+                <label for="createAt" class="form-label">Diubah Pada</label>
+                <h5 class="form-label" id="updatedAt"><strong>UpdatedAt</strong></h5>
+            </div>
+                
+    
+              
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              <button type="submit" class="btn btn-primary">Save changes</button>
+            </div>
+            </form>
+          </div>
+        </div>
+      </div>
+   <script>
+        moment.locale('id');
+        var hostUrl = "{{.url}}/api/notes/all";
+        var table = $("#my-task").DataTable({
+            ordering:false,
+            ajax: { url: hostUrl, dataSrc: 'data' },
+            
+            dataType: 'json',
+            contentType: 'application/json',
+            type: "GET",   
+                    
+            columns: [
+                { data: "content" },
+                { data:  "is_done",
+                
+                    render:function(data,type,row){
+                        if (data==true){
+                        return '<button onclick=undone('+row.id+') class="btn btn-success btn-block">Undone</button> <button onclick="detail('+row.id+')" class="btn btn-primary btn-block">Detail</button> <button class="btn btn-danger" onclick="deleted('+row.id+')">Delete</button>';
+                    }else{
+                        
+                        return '<button onclick=done('+row.id+') class="btn btn-secondary btn-block">Done</button> <button onclick="detail('+row.id+')" class="btn btn-primary btn-block">Detail</button> <button class="btn btn-danger" onclick="deleted('+row.id+')">Delete</button>';
+                    }
+                    },
+                    targets:1,
+
+                },
+                
+            ]
+            
+        });  
+            
+        $('#ubah-task').submit(function(e){
+            var data={
+                content:'',
+                id:0
+            }
+            data.content = document.getElementById('content-update').value;
+            data.id = parseInt(document.getElementById('id-update').value);
+            $.ajax({
+                type:"POST",
+                url:"{{.url}}/api/notes/update",
+                data:JSON.stringify(data),
+                success:function(response){
+                    if (response.status == true){
+                        $('#task-detail').modal('hide');
+                        Swal.fire(
+                        'Berhasil',
+                        response.pesan,
+                        'success'
+                        );
+                        table.ajax.reload(null,false)
+                    }else{
+                        $('#task-detail').modal('hide');
+                        Swal.fire(
+                        'Ooops',
+                        response.pesan,
+                        'error'
+                        );
+                    }
+                },
+                dataType: "json",
+                contentType : "application/json"
+            });
+            e. preventDefault();
+        });
+        $('#create-notes').submit(function(e){
+        
+            var data={
+                content:''
+            };
+            data.content = document.getElementById('content').value;
+            
+            $.ajax({
+                type:"POST",
+                url:"{{.url}}/api/notes/create",
+                data:JSON.stringify(data),
+                success:function(response){
+                    if (response.status == true) {
+                        document.getElementById('content').value='';
+                        Swal.fire(
+                        'Berhasil',
+                        response.pesan,
+                        'success'
+                        );
+                        table.ajax.reload(null,false)
+                        
+                    }else{
+                        document.getElementById('content').value='';
+                        Swal.fire(
+                        'Ooops',
+                        'Gagal',
+                        'error'
+                        );
+                    }
+                },
+                dataType: "json",
+                contentType : "application/json"
+            });
+            e. preventDefault();
+        })
+
+        function done(id){
+            Swal.fire({
+                title: 'Apakah yakin untuk mengubah menjadi selesai?',
+                showDenyButton: false,
+                showCancelButton: true,
+                confirmButtonText: 'Done',
+                denyButtonText: 'Batal',
+                }).then((result) => {
+                
+                if (result.isConfirmed) {
+                    $.ajax({
+                        type:"GET",
+                        url:"{{.url}}/api/notes/done/"+id,
+                        success:function(response){
+                            if (response.status == true){
+                                Swal.fire(
+                                'Berhasil',
+                                response.pesan,
+                                'success'
+                                );
+                                table.ajax.reload(null,false)
+                            }else{
+                                Swal.fire(
+                                'Ooops',
+                                response.pesan,
+                                'error'
+                                );
+                            }
+                        }
+                    });
+                } 
+            })
+        }
+
+        function undone(id){
+            Swal.fire({
+                title: 'Apakah yakin untuk mengubah menjadi belum selesai?',
+                showDenyButton: false,
+                showCancelButton: true,
+                confirmButtonText: 'Undone',
+                denyButtonText: 'Batal',
+                }).then((result) => {
+                
+                if (result.isConfirmed) {
+                    $.ajax({
+                        type:"GET",
+                        url:"{{.url}}/api/notes/undone/"+id,
+                        success:function(response){
+                            if (response.status == true){
+                                Swal.fire(
+                                'Berhasil',
+                                response.pesan,
+                                'success'
+                                );
+                                table.ajax.reload(null,false)
+                            }else{
+                                Swal.fire(
+                                'Ooops',
+                                response.pesan,
+                                'error'
+                                );
+                            }
+                        }
+                    });
+                } 
+            })
+        }
+
+        function deleted(id){
+            Swal.fire({
+                title: 'Apakah yakin untuk menghapus task?',
+                showDenyButton: false,
+                showCancelButton: true,
+                confirmButtonText: 'Hapus',
+                denyButtonText: 'Batal',
+                }).then((result) => {
+                
+                if (result.isConfirmed) {
+                    $.ajax({
+                        type:"DELETE",
+                        url:"{{.url}}/api/notes/delete/"+id,
+                        success:function(response){
+                            if (response.status == true){
+                                Swal.fire(
+                                'Berhasil',
+                                response.pesan,
+                                'success'
+                                );
+                                table.ajax.reload(null,false)
+                            }else{
+                                Swal.fire(
+                                'Ooops',
+                                response.pesan,
+                                'error'
+                                );
+                            }
+                        }
+                    });
+                } 
+            })
+        }
+
+        function detail(id){
+            $.ajax({
+                type:"GET",
+                url:"{{.url}}/api/notes/detail/"+id,
+                success:function(response){
+                    if (response.status == true){
+                        document.getElementById('id-update').value = response.data.id
+                        document.getElementById('content-update').value = response.data.content
+                        if (response.data.is_done == true){
+                            document.getElementById('status').innerHTML="Sudah Dilaksanakan";
+                        }else{
+                            document.getElementById('status').innerHTML="Belum Dilaksanakan";
+                        }
+                        document.getElementById('createdAt').innerHTML=moment(response.data.created_at).format('LLLL');
+                        document.getElementById('updatedAt').innerHTML=moment(response.data.updated_at).format('LLLL');
+                        $('#task-detail').modal('show');
+                    }else{
+                        Swal.fire(
+                        'Ooops',
+                        response.pesan,
+                        'error'
+                        );
+                    }
+                }   
+            })
+            
+            
+        }
+       
+    </script>
+
+</body>
+</html>
+
+
+
+{{ end }}
