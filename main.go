@@ -54,5 +54,5 @@ func main() {
 		pageRoute.GET("", pageCtr.Index)
 	}
 
-	r.Run()
+	r.Run(":80")
 }
